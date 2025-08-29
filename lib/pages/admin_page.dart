@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
 import '../providers/leaderboard_provider.dart';
 import '../models/game.dart';
+import '../models/leaderboard_entry.dart';
 
 class AdminPage extends StatefulWidget {
   @override
@@ -78,7 +79,11 @@ class _AdminPageState extends State<AdminPage> {
     final games = gameProvider.games;
     final users = _searchQuery.isEmpty
         ? leaderboardProvider.entries
-        : leaderboardProvider.searchEntries(_searchQuery);
+        : leaderboardProvider.entries
+            .where((entry) => entry.username
+                .toLowerCase()
+                .contains(_searchQuery.toLowerCase()))
+            .toList();
 
     return Scaffold(
       appBar: AppBar(title: Text('Admin Page'), centerTitle: true),
@@ -118,6 +123,7 @@ class _AdminPageState extends State<AdminPage> {
                         _team2Controller.text.isEmpty ||
                         _spreadController.text.isEmpty) return;
                     gameProvider.addGame(Game(
+                      id: '', // Firestore will auto-generate the ID
                       team1: _team1Controller.text,
                       team2: _team2Controller.text,
                       spread: double.tryParse(_spreadController.text) ?? 0.0,
@@ -150,7 +156,6 @@ class _AdminPageState extends State<AdminPage> {
                 itemCount: games.length,
                 itemBuilder: (ctx, i) {
                   final game = games[i];
-                  final key = game.key;
                   return Card(
                     child: ListTile(
                       title: Text('${game.team1} vs ${game.team2}',
@@ -171,13 +176,13 @@ class _AdminPageState extends State<AdminPage> {
                             onChanged: (winner) {
                               if (winner != null) {
                                 gameProvider.setWinnerByKey(
-                                    key, winner, leaderboardProvider);
+                                    game.id, winner, leaderboardProvider);
                               }
                             },
                           ),
                           IconButton(
                             icon: Icon(Icons.delete, color: Colors.red),
-                            onPressed: () => gameProvider.deleteGame(i),
+                            onPressed: () => gameProvider.deleteGame(game.id),
                           ),
                         ],
                       ),

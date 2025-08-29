@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "571747964449",
+    "project_id": "slater-a312e",
+    "storage_bucket": "slater-a312e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:571747964449:android:b482590dd44952a275b560",
+        "android_client_info": {
+          "package_name": "com.example.flutter_application_1"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA-igIEFM5yH8latHwnjiqRp9jxetc7N7I"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
