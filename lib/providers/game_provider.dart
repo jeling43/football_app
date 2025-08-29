@@ -1,51 +1,48 @@
 import 'package:flutter/material.dart';
-import 'package:hive/hive.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/game.dart';
 import '../providers/leaderboard_provider.dart';
 
 class GameProvider extends ChangeNotifier {
-  List<Game> _games = [];
-  final Box<Game> _gameBox = Hive.box<Game>('games');
+  final FirebaseFirestore _db = FirebaseFirestore.instance;
+  List<Game> games = [];
 
   GameProvider() {
     _loadGames();
   }
 
-  List<Game> get games => _games;
-
-  void _loadGames() {
-    final oneWeekAgo = DateTime.now().subtract(Duration(days: 7));
-    _games =
-        _gameBox.values.where((g) => g.createdAt.isAfter(oneWeekAgo)).toList();
+  Future<void> _loadGames() async {
+    final snapshot = await _db.collection('games').get();
+    games =
+        snapshot.docs.map((doc) => Game.fromJson(doc.data(), doc.id)).toList();
     notifyListeners();
   }
 
-  void addGame(Game game) async {
-    await _gameBox.add(game);
-    _loadGames();
+  Future<void> addGame(Game game) async {
+    await _db.collection('games').add(game.toJson());
+    await _loadGames();
   }
 
-  void clearGames() async {
-    await _gameBox.clear();
-    _loadGames();
-  }
-
-  void deleteGame(int index) async {
-    final key = _gameBox.keyAt(index);
-    await _gameBox.delete(key);
-    _loadGames();
-  }
-
-  // Winner update now triggers leaderboard recalculation!
-  void setWinnerByKey(dynamic key, String winner,
-      LeaderboardProvider leaderboardProvider) async {
-    final game = _gameBox.get(key);
-    if (game != null) {
-      game.winner = winner;
-      await game.save();
-      _loadGames();
-      leaderboardProvider
-          .updateAllCorrectPicks(_games); // <-- recalculate correct picks!
+  Future<void> clearGames() async {
+    final batch = _db.batch();
+    final snapshot = await _db.collection('games').get();
+    for (var doc in snapshot.docs) {
+      batch.delete(doc.reference);
     }
+    await batch.commit();
+    await _loadGames();
+  }
+
+  Future<void> deleteGame(String id) async {
+    await _db.collection('games').doc(id).delete();
+    await _loadGames();
+  }
+
+  Future<void> setWinnerByKey(
+      String id, String winner, LeaderboardProvider leaderboardProvider) async {
+    await _db.collection('games').doc(id).update({'winner': winner});
+    await _loadGames();
+    await leaderboardProvider
+        .recalculateLeaderboard(); // You may need to implement this for Firestore
   }
 }

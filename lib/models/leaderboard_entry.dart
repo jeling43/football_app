@@ -1,22 +1,25 @@
-import 'package:hive/hive.dart';
-
-part 'leaderboard_entry.g.dart';
-
-@HiveType(typeId: 1)
-class LeaderboardEntry extends HiveObject {
-  @HiveField(0)
-  String username;
-  @HiveField(1)
-  Map<int, String> picks; // game index to pick
-  @HiveField(2)
-  int correctPicks;
-  @HiveField(3)
-  DateTime createdAt;
+class LeaderboardEntry {
+  final String username;
+  final Map<String, String> picks;
+  final int correctPicks;
 
   LeaderboardEntry({
     required this.username,
     required this.picks,
     this.correctPicks = 0,
-    DateTime? createdAt,
-  }) : createdAt = createdAt ?? DateTime.now();
+  });
+
+  Map<String, dynamic> toJson() => {
+        'picks': picks,
+        'correctPicks': correctPicks,
+      };
+
+  // Add this static fromJson constructor:
+  static LeaderboardEntry fromJson(Map<String, dynamic> json, String id) {
+    return LeaderboardEntry(
+      username: id,
+      picks: Map<String, String>.from(json['picks'] ?? {}),
+      correctPicks: json['correctPicks'] ?? 0,
+    );
+  }
 }
