@@ -15,8 +15,64 @@ class _AdminPageState extends State<AdminPage> {
   final _spreadController = TextEditingController();
   String _searchQuery = '';
 
+  // Password protection variables
+  bool _authenticated = false;
+  final _passwordController = TextEditingController();
+  static const String adminPassword = 'football2024'; // Change as needed
+
+  @override
+  void dispose() {
+    _team1Controller.dispose();
+    _team2Controller.dispose();
+    _spreadController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (!_authenticated) {
+      return Scaffold(
+        appBar: AppBar(title: Text('Admin Login'), centerTitle: true),
+        body: Center(
+          child: Padding(
+            padding: const EdgeInsets.all(32),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text('Enter Admin Password',
+                    style: Theme.of(context).textTheme.titleLarge),
+                SizedBox(height: 20),
+                TextField(
+                  controller: _passwordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    labelText: 'Password',
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+                SizedBox(height: 16),
+                ElevatedButton(
+                  child: Text('Login'),
+                  onPressed: () {
+                    if (_passwordController.text == adminPassword) {
+                      setState(() {
+                        _authenticated = true;
+                      });
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Incorrect password'),
+                          backgroundColor: Colors.red));
+                    }
+                  },
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final gameProvider = Provider.of<GameProvider>(context);
     final leaderboardProvider = Provider.of<LeaderboardProvider>(context);
     final games = gameProvider.games;
