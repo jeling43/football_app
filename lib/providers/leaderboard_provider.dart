@@ -47,7 +47,32 @@ class LeaderboardProvider extends ChangeNotifier {
     await _loadEntries();
   }
 
-  Future<void> recalculateLeaderboard() async {}
+  // Recalculate the leaderboard based on game winners
+  Future<void> recalculateLeaderboard() async {
+    final gamesSnapshot = await _db.collection('games').get();
+    final Map<String, int> userScores = {};
 
-  // Add recalculateLeaderboard, searchEntries, etc. as needed
+    for (var gameDoc in gamesSnapshot.docs) {
+      final gameData = gameDoc.data();
+      if (gameData.containsKey('winner') && gameData['winner'] != null) {
+        final winner = gameData['winner'] as String;
+        userScores[winner] = (userScores[winner] ?? 0) + 1;
+      }
+    }
+
+    final batch = _db.batch();
+    for (var entry in userScores.entries) {
+      final username = entry.key;
+      final score = entry.value;
+
+      batch.set(
+        _db.collection('leaderboard').doc(username),
+        {'username': username, 'score': score},
+        SetOptions(merge: true),
+      );
+    }
+
+    await batch.commit();
+    await _loadEntries();
+  }
 }

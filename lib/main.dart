@@ -34,7 +34,7 @@ class MyApp extends StatelessWidget {
         theme: georgiaTechTheme, // Use your custom theme
         initialRoute: '/',
         routes: {
-          '/': (context) => UserPage(),
+          '/home': (context) => UserPage(),
           '/admin': (context) => AdminPage(),
           '/leaderboard': (context) => LeaderboardPage(),
         },

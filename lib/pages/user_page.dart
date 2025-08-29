@@ -1,159 +1,119 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/game_provider.dart';
-import '../providers/leaderboard_provider.dart';
-import '../models/game.dart';
-import '../models/leaderboard_entry.dart';
 
-class UserPage extends StatefulWidget {
-  @override
-  _UserPageState createState() => _UserPageState();
-}
-
-class _UserPageState extends State<UserPage> {
-  String _username = '';
-  Map<int, String> _userPicks = {};
-  final TextEditingController _usernameController = TextEditingController();
-
-  @override
-  void dispose() {
-    _usernameController.dispose();
-    super.dispose();
-  }
-
+class UserPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final games = Provider.of<GameProvider>(context).games;
+    final gameProvider = Provider.of<GameProvider>(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('User Page'),
+        title: Text('Home'),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
           children: [
-            TextField(
-              controller: _usernameController,
-              decoration: InputDecoration(
-                labelText: "Username",
-                prefixIcon:
-                    Icon(Icons.person, color: Theme.of(context).primaryColor),
+            DrawerHeader(
+              decoration: BoxDecoration(
+                color: Colors.blue,
               ),
-              onChanged: (value) {
-                setState(() {
-                  _username = value;
-                });
+              child: Text(
+                'Menu',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: Icon(Icons.home),
+              title: Text('Home'),
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/home');
               },
             ),
-            SizedBox(height: 16),
-            Expanded(
-              child: games.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No games available. Check back soon!',
-                        style: Theme.of(context).textTheme.titleLarge,
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: games.length,
-                      itemBuilder: (ctx, i) {
-                        return Card(
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                vertical: 12, horizontal: 18),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      '${games[i].team1} vs ${games[i].team2}',
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).primaryColor,
-                                        fontSize: 18,
-                                      ),
-                                    ),
-                                    SizedBox(height: 4),
-                                    Text('Spread: ${games[i].spread}',
-                                        style: TextStyle(
-                                            color: Theme.of(context)
-                                                .colorScheme
-                                                .secondary)),
-                                  ],
-                                ),
-                                DropdownButton<String>(
-                                  hint: Text('Pick Winner'),
-                                  value: _userPicks[i],
-                                  items: [
-                                    DropdownMenuItem(
-                                      value: games[i].team1,
-                                      child: Text(games[i].team1),
-                                    ),
-                                    DropdownMenuItem(
-                                      value: games[i].team2,
-                                      child: Text(games[i].team2),
-                                    ),
-                                  ],
-                                  onChanged: (pick) {
-                                    setState(() {
-                                      _userPicks[i] = pick!;
-                                    });
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-            SizedBox(height: 14),
-            ElevatedButton.icon(
-              icon: Icon(Icons.send),
-              label: Text("Submit Picks"),
-              onPressed: () {
-                if (_username.isEmpty) return;
-                Provider.of<LeaderboardProvider>(context, listen: false)
-                    .addOrUpdateEntry(
-                  LeaderboardEntry(
-                      username: _username, picks: Map.from(_userPicks)),
-                );
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Picks submitted!'),
-                    backgroundColor: Theme.of(context).colorScheme.secondary,
-                  ),
-                );
-                // RESET for next user:
-                setState(() {
-                  _username = '';
-                  _userPicks.clear();
-                  _usernameController.clear();
-                });
+            ListTile(
+              leading: Icon(Icons.settings),
+              title: Text('Settings'),
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/settings');
               },
             ),
-            SizedBox(height: 12),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: [
-                ElevatedButton.icon(
-                  icon: Icon(Icons.leaderboard),
-                  label: Text("Leaderboard"),
-                  onPressed: () => Navigator.pushNamed(context, '/leaderboard'),
-                ),
-                ElevatedButton.icon(
-                  icon: Icon(Icons.admin_panel_settings),
-                  label: Text("Admin"),
-                  onPressed: () => Navigator.pushNamed(context, '/admin'),
-                ),
-              ],
+            ListTile(
+              leading: Icon(Icons.info),
+              title: Text('About'),
+              onTap: () {
+                Navigator.pushReplacementNamed(context, '/about');
+              },
             ),
           ],
         ),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: gameProvider.games.isEmpty
+            ? Center(
+                child: Text(
+                  'No games available',
+                  style: TextStyle(fontSize: 18),
+                ),
+              )
+            : ListView.builder(
+                itemCount: gameProvider.games.length,
+                itemBuilder: (context, index) {
+                  final game = gameProvider.games[index];
+                  final gameId = game['id']?.toString() ??
+                      index.toString(); // Always a string
+                  return Card(
+                    key: ValueKey(gameId), // Local key, safe for ListView
+                    child: ListTile(
+                      title: Text(
+                        '${game['team1'] ?? 'Unknown'} vs ${game['team2'] ?? 'Unknown'}',
+                      ),
+                      subtitle: Text(
+                        'Spread: ${game['spread'] ?? 'N/A'}',
+                      ),
+                      trailing: game['winner'] != null
+                          ? Text(
+                              'Winner: ${game['winner']}',
+                              style: TextStyle(
+                                color: Colors.green,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            )
+                          : ElevatedButton(
+                              key: ValueKey(
+                                  'button_$gameId'), // Local key, unique per button
+                              child: Text('Predict Winner'),
+                              onPressed: () {
+                                print(
+                                    'Predict Winner button pressed for game ID: $gameId');
+                                _showPredictWinnerDialog(context, gameId);
+                              },
+                            ),
+                    ),
+                  );
+                },
+              ),
+      ),
+    );
+  }
+
+  void _showPredictWinnerDialog(BuildContext context, String gameId) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Predict Winner'),
+        content: Text('Predict the winner for game ID: $gameId'),
+        actions: [
+          TextButton(
+            child: Text('Close'),
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
       ),
     );
   }

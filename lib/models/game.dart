@@ -3,27 +3,33 @@ class Game {
   final String team1;
   final String team2;
   final double spread;
-  final String winner;
+  final String? winner;
 
-  Game(
-      {required this.id,
-      required this.team1,
-      required this.team2,
-      required this.spread,
-      this.winner = ''});
+  Game({
+    required this.id,
+    required this.team1,
+    required this.team2,
+    required this.spread,
+    this.winner,
+  });
 
-  Map<String, dynamic> toJson() => {
-        'team1': team1,
-        'team2': team2,
-        'spread': spread,
-        'winner': winner,
-      };
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'team1': team1,
+      'team2': team2,
+      'spread': spread,
+      'winner': winner,
+    };
+  }
 
-  static Game fromJson(Map<String, dynamic> json, String id) => Game(
-        id: id,
-        team1: json['team1'],
-        team2: json['team2'],
-        spread: (json['spread'] as num).toDouble(),
-        winner: json['winner'] ?? '',
-      );
+  factory Game.fromMap(Map<String, dynamic> map, String documentId) {
+    return Game(
+      id: documentId,
+      team1: map['team1'] ?? '',
+      team2: map['team2'] ?? '',
+      spread: (map['spread'] as num?)?.toDouble() ?? 0.0,
+      winner: map['winner'],
+    );
+  }
 }
